@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  # ── Redis ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: intellimeet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
