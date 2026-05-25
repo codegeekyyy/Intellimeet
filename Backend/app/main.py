@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.database import engine
 from app.config import settings
-from app.routers import auth
+from app.routers import auth, audio, meetings
 
 # Setup logging
 logging.basicConfig(
@@ -50,6 +50,8 @@ app.add_middleware(
 
 # Register routers
 app.include_router(auth.router)
+app.include_router(audio.router)
+app.include_router(meetings.router)
 
 # Root route
 @app.get("/")
