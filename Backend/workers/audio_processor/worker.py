@@ -2,11 +2,37 @@ import asyncio
 import json
 import logging
 import sys
-from redis.asyncio import Redis
+import os
 
-# Ensure parent directory is in python path
+# Put Backend in Python path
 sys.path.append(sys.path[0] + "/../..")
 
+# Mock optional packages for SpeechBrain to prevent importlib find_spec failures during lightning stack inspects
+from unittest.mock import MagicMock
+import importlib.machinery
+def mock_module(name):
+    mock = MagicMock()
+    mock.__spec__ = importlib.machinery.ModuleSpec(name, None)
+    sys.modules[name] = mock
+
+mock_module('k2')
+mock_module('flair')
+mock_module('numba')
+
+# Monkeypatch SpeechBrain LazyModule to ignore import errors during dynamic inspect checks
+try:
+    import speechbrain.utils.importutils as sb_import
+    old_ensure = sb_import.LazyModule.ensure_module
+    def patched_ensure(self, stacklevel=1):
+        try:
+            return old_ensure(self, stacklevel)
+        except Exception:
+            return MagicMock()
+    sb_import.LazyModule.ensure_module = patched_ensure
+except Exception:
+    pass
+
+from redis.asyncio import Redis
 from app.config import settings
 from app.services.queue import dispatch_llm_job, set_job_progress
 

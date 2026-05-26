@@ -8,6 +8,18 @@ ffmpeg_bin_path = r"C:\Users\harsh\AppData\Local\Microsoft\WinGet\Packages\Gyan.
 if os.path.exists(ffmpeg_bin_path) and ffmpeg_bin_path not in os.environ["PATH"]:
     os.environ["PATH"] = ffmpeg_bin_path + os.pathsep + os.environ["PATH"]
 
+# Add Python-packaged NVIDIA DLL directories to PATH for ctranslate2 (faster-whisper) on Windows
+import sys
+if sys.platform == "win32":
+    venv_path = sys.prefix
+    site_packages = os.path.join(venv_path, "Lib", "site-packages")
+    if os.path.exists(site_packages):
+        for pkg in ["cublas", "cudnn", "cuda_runtime", "cusolver", "cusparse"]:
+            bin_dir = os.path.join(site_packages, "nvidia", pkg, "bin")
+            if os.path.exists(bin_dir) and bin_dir not in os.environ["PATH"]:
+                os.environ["PATH"] = bin_dir + os.pathsep + os.environ["PATH"]
+
+
 logger = logging.getLogger("audio_worker.transcriber")
 
 class AudioTranscriber:
