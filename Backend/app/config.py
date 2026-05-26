@@ -27,8 +27,14 @@ class Settings(BaseSettings):
     HUGGINGFACE_TOKEN: str
     GROQ_API_KEY: str
 
+    def __init__(self, **values):
+        super().__init__(**values)
+        if not os.path.isabs(self.UPLOAD_DIR):
+            backend_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.UPLOAD_DIR = os.path.abspath(os.path.join(backend_root, self.UPLOAD_DIR))
+
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
         env_file_encoding="utf-8",
         extra="ignore"
     )
