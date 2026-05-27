@@ -1,11 +1,15 @@
 import logging
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.database import engine
 from app.config import settings
-from app.routers import auth, audio, meetings
+from app.routers import auth, audio, meetings, interview
 
 # Setup logging
 logging.basicConfig(
@@ -48,10 +52,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Exception Handlers
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "error_code": f"HTTP_{exc.status_code}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": exc.errors(),
+            "error_code": "VALIDATION_ERROR",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    detail = str(exc) if settings.DEBUG else "An unexpected internal server error occurred."
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": detail,
+            "error_code": "INTERNAL_SERVER_ERROR",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    )
+
 # Register routers
 app.include_router(auth.router)
 app.include_router(audio.router)
 app.include_router(meetings.router)
+app.include_router(interview.router)
 
 # Root route
 @app.get("/")
