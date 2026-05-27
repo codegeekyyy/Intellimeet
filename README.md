@@ -44,6 +44,35 @@ flowchart TD
     end
 ```
 
+### 🎯 Interview Prep Pipeline
+
+For custom technical/behavioral interview preparation, candidate responses are processed synchronously to provide fast evaluation and feedback:
+
+```mermaid
+flowchart TD
+    subgraph Client / API Layer
+        A[Client Request] -->|1. POST /interview/session/start| B[FastAPI Web Server]
+        A -->|5. POST /interview/session/{id}/answer| B
+        A -->|12. GET /interview/session/{id}/history| B
+    end
+
+    subgraph Question Generation Flow
+        B -->|2. JD & Resume| C[Groq LLM Client]
+        C -->|3. Llama-3.3 Questions JSON| D[(PostgreSQL DB)]
+        D -->|4. Return 5 Tailored Questions| B
+    end
+
+    subgraph Answer Evaluation Flow
+        B -->|6. Upload Audio Answer & Index| F[Verify Session & Validate MIME]
+        F -->|7. Save Audio Locally| G[Storage Service]
+        G -->|8. Preprocess WAV| H[FFmpeg Resampler 16kHz]
+        H -->|9. Speech-to-Text| I[Local Whisper Transcriber]
+        I -->|10. Text Transcript & Context| J[Groq LLM Client]
+        J -->|11. Generate STAR Feedback JSON| K[(PostgreSQL DB)]
+        K -->|Return Transcript & Evaluation| B
+    end
+```
+
 ---
 
 ## 🛠️ Tech Stack & Key Components
@@ -155,3 +184,8 @@ python workers/llm_processor/worker.py
 * `GET /meetings/` — List all meetings uploaded by the current user.
 * `GET /meetings/{session_id}` — Fetch detailed statistics, speaker-labeled transcripts, and the final LLM-generated summary.
 * `DELETE /meetings/{session_id}` — Deletes the meeting session, database records, and physical audio files.
+
+### 🎯 Interview Prep Router
+* `POST /interview/session/start` — Start a practice session by uploading a Job Description and Resume to generate 5 custom questions.
+* `POST /interview/session/{session_id}/answer` — Submit an audio answer for a specific question to transcribe it locally and evaluate it using STAR criteria.
+* `GET /interview/session/{session_id}/history` — Fetch the complete history of questions, audio attempts, and evaluation scores for the session.

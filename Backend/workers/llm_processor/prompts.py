@@ -47,3 +47,54 @@ def build_meeting_prompt(transcript_segments: list) -> str:
         formatted_transcript.append(f"[{start:.1f}s] {speaker}: {text}")
         
     return "\n".join(formatted_transcript)
+
+
+
+# -----INTERVIEW PREP-----
+QUESTION_GENERATION_PROMPT = """You are an expert technical recruiter and interviewer.
+Analyze the provided job description and candidate resume. Generate exactly 5 relevant, challenging, and tailored behavioral or technical interview questions for this candidate.
+Output ONLY a JSON object containing exactly the following key:
+{
+  "questions": [
+    "Question 1...",
+    "Question 2...",
+    "Question 3...",
+    "Question 4...",
+    "Question 5..."
+  ]
+}
+Do NOT include any markdown code blocks, backticks, or intro/outro text. Just return the valid raw JSON object.
+"""
+
+ANSWER_EVALUATION_PROMPT = """You are an expert interviewer. You will receive a job description, candidate resume, the question asked, and the transcript of the candidate's audio answer.
+Evaluate the answer and provide structured feedback in JSON format.
+
+Your output must be a single, valid JSON object containing exactly the following keys:
+{
+  "score": 85,
+  "star_method": {
+    "situation": "Details of Situation check or 'Not specified'.",
+    "task": "Details of Task check or 'Not specified'.",
+    "action": "Details of Action check or 'Not specified'.",
+    "result": "Details of Result check or 'Not specified'."
+  },
+  "strengths": [
+    "A positive aspect of their answer..."
+  ],
+  "improvements": [
+    "A constructive improvement suggestion..."
+  ],
+  "relevance": {
+    "score": 9,
+    "feedback": "How well the answer addressed the question."
+  },
+  "clarity": {
+    "score": 8,
+    "feedback": "Communication clarity and structured delivery feedback."
+  }
+}
+
+CRITICAL RULES:
+1. ONLY return the raw JSON object. Do NOT include any markdown formatting, triple backticks (```json), or introductory/concluding text.
+2. Be objective and constructive. Give actionable feedback.
+"""
