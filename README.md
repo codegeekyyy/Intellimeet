@@ -52,8 +52,8 @@ For custom technical/behavioral interview preparation, candidate responses are p
 flowchart TD
     subgraph Client / API Layer
         A[Client Request] -->|1. POST /interview/session/start| B[FastAPI Web Server]
-        A -->|5. POST /interview/session/{id}/answer| B
-        A -->|12. GET /interview/session/{id}/history| B
+        A -->|5. POST /interview/session/session_id/answer| B
+        A -->|12. GET /interview/session/session_id/history| B
     end
 
     subgraph Question Generation Flow
